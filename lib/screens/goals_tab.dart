@@ -110,18 +110,63 @@ class _GoalsTabState extends State<GoalsTab> {
     );
   }
 
+  void _addToSavings(Goal goal) {
+    final addController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Add to Savings for "${goal.title}"'),
+        content: TextField(
+          controller: addController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: 'Amount to Add',
+            hintText: 'e.g. 50.00',
+            prefixText: getCurrencyPrefix(widget.currency),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final addText = addController.text.trim();
+              final amount = double.tryParse(addText);
+              if (amount != null && amount > 0) {
+                setState(() {
+                  goal.savedAmount += amount;
+                });
+                widget.onGoalsChanged();
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _quickUpdateSaved(Goal goal) {
     final savedController = TextEditingController(text: goal.savedAmount.toString());
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Update Saved for "${goal.title}"'),
+        title: Text('Set Total Saved for "${goal.title}"'),
         content: TextField(
           controller: savedController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
-            labelText: 'New Saved Amount',
+            labelText: 'New Total Saved Amount',
             prefixText: getCurrencyPrefix(widget.currency),
           ),
           autofocus: true,
@@ -402,16 +447,33 @@ class _GoalsTabState extends State<GoalsTab> {
                                         color: Colors.grey,
                                       ),
                                     ),
-                                    TextButton.icon(
-                                      onPressed: () => _quickUpdateSaved(goal),
-                                      icon: const Icon(Icons.update, size: 16),
-                                      label: const Text('Update Saved'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: Colors.teal.shade700,
-                                        padding: EdgeInsets.zero,
-                                        minimumSize: const Size(50, 30),
-                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                      ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        TextButton.icon(
+                                          onPressed: () => _addToSavings(goal),
+                                          icon: const Icon(Icons.add, size: 16),
+                                          label: const Text('Add'),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.teal.shade700,
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: const Size(40, 30),
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        TextButton.icon(
+                                          onPressed: () => _quickUpdateSaved(goal),
+                                          icon: const Icon(Icons.update, size: 16),
+                                          label: const Text('Set'),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.grey,
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: const Size(40, 30),
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
