@@ -5,7 +5,7 @@ import 'package:finance_app/main.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Finance Tracker tabs smoke test with Settings and Currency', (WidgetTester tester) async {
+  testWidgets('Finance Tracker tabs smoke test with Budgets and Settings', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
 
     // Build our app and trigger a frame.
@@ -22,6 +22,14 @@ void main() {
     // Verify that "My Goals" is displayed and Your Goals header appears.
     expect(find.text('My Goals'), findsWidgets);
     expect(find.text('Your Goals'), findsOneWidget);
+
+    // Tap on the "My Budgets" navigation destination.
+    await tester.tap(find.text('My Budgets'));
+    await tester.pumpAndSettle();
+
+    // Verify that "My Budgets" is displayed and Your Budgets header appears.
+    expect(find.text('My Budgets'), findsWidgets);
+    expect(find.text('Your Budgets'), findsOneWidget);
 
     // Tap on the "Settings" navigation destination.
     await tester.tap(find.text('Settings'));

@@ -41,6 +41,7 @@ class _FinanceTrackerAppState extends State<FinanceTrackerApp> {
       StorageService.saveData(
         data['accounts'],
         data['goals'],
+        data['budgets'],
         data['currency'],
       );
     });

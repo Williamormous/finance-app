@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/account.dart';
 import '../models/goal.dart';
+import '../models/budget.dart';
 import '../services/storage_service.dart';
 import 'accounts_dashboard_tab.dart';
 import 'goals_tab.dart';
+import 'budgets_tab.dart';
 import 'settings_tab.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -29,6 +31,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   List<Account> _accounts = [];
   List<Goal> _goals = [];
+  List<Budget> _budgets = [];
   String _currency = '\$';
 
   @override
@@ -43,6 +46,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       setState(() {
         _accounts = List<Account>.from(data['accounts']!);
         _goals = List<Goal>.from(data['goals']!);
+        _budgets = List<Budget>.from(data['budgets']!);
         _currency = data['currency'] as String? ?? '\$';
         _isLoading = false;
       });
@@ -50,7 +54,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   Future<void> _persistData() async {
-    await StorageService.saveData(_accounts, _goals, _currency);
+    await StorageService.saveData(_accounts, _goals, _budgets, _currency);
   }
 
   @override
@@ -78,6 +82,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         goals: _goals,
         currency: _currency,
         onGoalsChanged: () {
+          setState(() {});
+          _persistData();
+        },
+      ),
+      BudgetsTab(
+        budgets: _budgets,
+        currency: _currency,
+        onBudgetsChanged: () {
           setState(() {});
           _persistData();
         },
@@ -110,6 +122,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             icon: Icon(Icons.flag_outlined),
             selectedIcon: Icon(Icons.flag),
             label: 'My Goals',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.pie_chart_outline),
+            selectedIcon: Icon(Icons.pie_chart),
+            label: 'My Budgets',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 String formatCurrency(String currency, double amount) {
   final hasLetters = currency.contains(RegExp(r'[A-Za-z]'));
   final separator = hasLetters ? ' ' : '';
@@ -15,3 +17,14 @@ String getCurrencyPrefix(String currency) {
   final hasLetters = currency.contains(RegExp(r'[A-Za-z]'));
   return hasLetters ? '$currency ' : currency;
 }
+
+const List<Color> categoryColors = [
+  Colors.tealAccent,
+  Colors.amberAccent,
+  Colors.lightBlueAccent,
+  Colors.pinkAccent,
+  Colors.orangeAccent,
+  Colors.purpleAccent,
+  Colors.limeAccent,
+  Colors.cyanAccent,
+];
