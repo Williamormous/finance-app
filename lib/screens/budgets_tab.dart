@@ -21,6 +21,17 @@ class BudgetsTab extends StatefulWidget {
 }
 
 class _BudgetsTabState extends State<BudgetsTab> {
+  static const List<Color> _categoryColors = [
+    Colors.tealAccent,
+    Colors.amberAccent,
+    Colors.lightBlueAccent,
+    Colors.pinkAccent,
+    Colors.orangeAccent,
+    Colors.purpleAccent,
+    Colors.limeAccent,
+    Colors.cyanAccent,
+  ];
+
   void _openCreateBudget() async {
     final result = await Navigator.push<Budget>(
       context,
@@ -243,22 +254,23 @@ class _BudgetsTabState extends State<BudgetsTab> {
                                       fontSize: 16,
                                     ),
                                   ),
+                                  // Color-coded progress bar line if categories exist
                                   if (budget.categories.isNotEmpty) ...[
                                     const SizedBox(height: 12),
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(6),
                                       child: SizedBox(
-                                        height: 8,
+                                        height: 10,
                                         child: Row(
                                           children: [
-                                            ...budget.categories.asMap().entries.map((entry) {
-                                              final catIndex = entry.key;
-                                              final cat = entry.value;
+                                            ...budget.categories.asMap().entries.map((catEntry) {
+                                              final catIndex = catEntry.key;
+                                              final cat = catEntry.value;
                                               final flex = budget.totalAmount > 0
                                                   ? ((cat.allocatedAmount / budget.totalAmount) * 1000).round()
                                                   : 0;
                                               if (flex <= 0) return const SizedBox.shrink();
-                                              final color = categoryColors[catIndex % categoryColors.length];
+                                              final color = _categoryColors[catIndex % _categoryColors.length];
                                               return Expanded(
                                                 flex: flex,
                                                 child: Container(color: color),
@@ -266,9 +278,7 @@ class _BudgetsTabState extends State<BudgetsTab> {
                                             }),
                                             if (unallocated > 0)
                                               Expanded(
-                                                flex: budget.totalAmount > 0
-                                                    ? ((unallocated / budget.totalAmount) * 1000).round()
-                                                    : 1000,
+                                                flex: ((unallocated / budget.totalAmount) * 1000).round(),
                                                 child: Container(color: Colors.grey),
                                               ),
                                           ],
@@ -276,15 +286,43 @@ class _BudgetsTabState extends State<BudgetsTab> {
                                       ),
                                     ),
                                     const SizedBox(height: 12),
-                                    ...budget.categories.map((cat) {
+                                    const Divider(),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      'Categories & Unallocated:',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...budget.categories.asMap().entries.map((catEntry) {
+                                      final catIndex = catEntry.key;
+                                      final cat = catEntry.value;
+                                      final color = _categoryColors[catIndex % _categoryColors.length];
                                       return Padding(
-                                        padding: const EdgeInsets.only(bottom: 4.0),
+                                        padding: const EdgeInsets.only(bottom: 6.0),
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              '• ${cat.name}',
-                                              style: const TextStyle(fontSize: 14),
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  width: 10,
+                                                  height: 10,
+                                                  decoration: BoxDecoration(
+                                                    color: color,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  cat.name,
+                                                  style: const TextStyle(fontSize: 14),
+                                                ),
+                                              ],
                                             ),
                                             Text(
                                               formatCurrency(widget.currency, cat.allocatedAmount),
@@ -303,9 +341,23 @@ class _BudgetsTabState extends State<BudgetsTab> {
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            const Text(
-                                              '• Unallocated amount',
-                                              style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  width: 10,
+                                                  height: 10,
+                                                  decoration: const BoxDecoration(
+                                                    color: Colors.grey,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                const Text(
+                                                  'Unallocated amount',
+                                                  style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+                                                ),
+                                              ],
                                             ),
                                             Text(
                                               formatCurrency(widget.currency, unallocated),

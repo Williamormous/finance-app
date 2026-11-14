@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/budget.dart';
 import '../utils/currency_utils.dart';
@@ -23,6 +24,17 @@ class BudgetDetailScreen extends StatefulWidget {
 class _BudgetDetailScreenState extends State<BudgetDetailScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _totalController;
+
+  static const List<Color> _categoryColors = [
+    Colors.tealAccent,
+    Colors.amberAccent,
+    Colors.lightBlueAccent,
+    Colors.pinkAccent,
+    Colors.orangeAccent,
+    Colors.purpleAccent,
+    Colors.limeAccent,
+    Colors.cyanAccent,
+  ];
 
   @override
   void initState() {
@@ -199,6 +211,18 @@ class _BudgetDetailScreenState extends State<BudgetDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final unallocatedAmount = (widget.budget.totalAmount - _categoriesSum).clamp(0.0, widget.budget.totalAmount);
+    
+    // Prepare values and colors for Pie Chart
+    List<double> pieValues = [];
+    List<Color> pieColors = [];
+    for (int i = 0; i < widget.budget.categories.length; i++) {
+      pieValues.add(widget.budget.categories[i].allocatedAmount);
+      pieColors.add(_categoryColors[i % _categoryColors.length]);
+    }
+    if (unallocatedAmount > 0) {
+      pieValues.add(unallocatedAmount);
+      pieColors.add(Colors.grey);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -287,43 +311,24 @@ class _BudgetDetailScreenState extends State<BudgetDetailScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Visual Progress Bar Breakdown (includes categories + grey unallocated)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              height: 14,
-              child: Row(
-                children: [
-                  if (widget.budget.categories.isEmpty)
-                    const Expanded(child: ColoredBox(color: Colors.grey))
-                  else ...[
-                    ...widget.budget.categories.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final cat = entry.value;
-                      final flex = widget.budget.totalAmount > 0 
-                          ? ((cat.allocatedAmount / widget.budget.totalAmount) * 1000).round()
-                          : 0;
-                      if (flex <= 0) return const SizedBox.shrink();
-                      final color = categoryColors[index % categoryColors.length];
-                      return Expanded(
-                        flex: flex,
-                        child: Container(color: color),
-                      );
-                    }),
-                    if (unallocatedAmount > 0)
-                      Expanded(
-                        flex: widget.budget.totalAmount > 0 
-                            ? ((unallocatedAmount / widget.budget.totalAmount) * 1000).round()
-                            : 1000,
-                        child: Container(color: Colors.grey),
-                      ),
-                  ],
-                ],
+          const SizedBox(height: 16),
+          // Pie Chart representation if categories exist
+          if (widget.budget.categories.isNotEmpty) ...[
+            Center(
+              child: SizedBox(
+                width: 200,
+                height: 200,
+                child: CustomPaint(
+                  painter: PieChartPainter(
+                    values: pieValues,
+                    colors: pieColors,
+                    total: widget.budget.totalAmount,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 24),
+          ],
           // Categories List + Unallocated Amount
           if (widget.budget.categories.isEmpty)
             const Padding(
@@ -340,7 +345,7 @@ class _BudgetDetailScreenState extends State<BudgetDetailScreen> {
             ...widget.budget.categories.asMap().entries.map((entry) {
               final index = entry.key;
               final cat = entry.value;
-              final color = categoryColors[index % categoryColors.length];
+              final color = _categoryColors[index % _categoryColors.length];
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
@@ -381,7 +386,7 @@ class _BudgetDetailScreenState extends State<BudgetDetailScreen> {
               );
             }),
           ],
-          // Unallocated amount row (always grey, shown whenever categories exist)
+          // Unallocated amount row (always grey, shown whenever there are categories)
           if (widget.budget.categories.isNotEmpty)
             Card(
               margin: const EdgeInsets.only(bottom: 8),
@@ -412,5 +417,51 @@ class _BudgetDetailScreenState extends State<BudgetDetailScreen> {
         ],
       ),
     );
+  }
+}
+
+class PieChartPainter extends CustomPainter {
+  final List<double> values;
+  final List<Color> colors;
+  final double total;
+
+  PieChartPainter({
+    required this.values,
+    required this.colors,
+    required this.total,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (total <= 0 || values.isEmpty) return;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.min(size.width, size.height) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    double startAngle = -math.pi / 2;
+
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    final borderPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..color = Colors.black38
+      ..strokeWidth = 1.5;
+
+    for (int i = 0; i < values.length; i++) {
+      if (values[i] <= 0) continue;
+      final sweepAngle = (values[i] / total) * 2 * math.pi;
+      paint.color = colors[i % colors.length];
+      canvas.drawArc(rect, startAngle, sweepAngle, true, paint);
+      canvas.drawArc(rect, startAngle, sweepAngle, true, borderPaint);
+      startAngle += sweepAngle;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant PieChartPainter oldDelegate) {
+    return oldDelegate.values != values || oldDelegate.colors != colors || oldDelegate.total != total;
   }
 }
